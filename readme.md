@@ -28,6 +28,25 @@ Once you have the CIFAR10 pngs in another folder you can compute the FID score u
 python -m pytorch_fid --device cuda:0 path/to/tauLDR_samples path/to/cifar10pngs
 ```
 
+### ELBO evaluation
+To reproduce the ELBO value reported in the paper for the CIFAR10 model, obtain the checkpoint as above.
+
+Then go to `config/eval/cifar10_elbo.py` and change `config.experiment_dir` to point to a directory that has the following structure
+```
+experiment_dir
+    - checkpoints
+        - ckpt_0001999999.pt
+    - config
+        - config_001.yaml
+```
+using the files downloaded from the dropbox. Also change `config.checkpoint_path` to point to `/path/to/experiment_dir/checkpoints/ckpt_0001999999.pt`.
+Change `config.cifar10_path` to point to somewhere where the CIFAR10 dataset can be downloaded (it will be automatically downloaded to that location).
+
+Finally, run the following command
+```
+python elbo_evaluation.py
+```
+
 ## Notebooks
 
 To generate CIFAR10 samples, open the `notebooks/image.ipynb` notebook.
