@@ -46,6 +46,7 @@ Finally, run the following command
 ```
 python elbo_evaluation.py
 ```
+This will save the ELBO value in a eval folder within the experiment_dir. The ELBO value is written in the file `neg_elbo`, the first 0 can be ignored and the second number is the negative ELBO averaged over the pixels. It should be around 3.59.
 
 ## Notebooks
 
