@@ -1,2 +1,4 @@
 __pycache__piano/checkpoints/ckpt_0000999999.pt
 cifar10/checkpoints/ckpt_0001999999.pt
+*.pt
+checkpoints/
