@@ -31,12 +31,12 @@ def get_config():
 
     config.sampler = sampler = ml_collections.ConfigDict()
     sampler.name = 'TauLeaping' # TauLeaping or PCTauLeaping
-    sampler.num_steps = 2 ** 12
-    sampler.min_t = 0.01
+    sampler.num_steps = 2 ** 16
+    sampler.min_t = 0.001
     sampler.eps_ratio = 1e-9
     sampler.initial_dist = 'gaussian'
-    sampler.num_corrector_steps = 10
-    sampler.corrector_step_size_multiplier = 1.5
-    sampler.corrector_entry_time = 0.1
+    # sampler.num_corrector_steps = 10
+    # sampler.corrector_step_size_multiplier = 1.5
+    # sampler.corrector_entry_time = 0.1
 
     return config

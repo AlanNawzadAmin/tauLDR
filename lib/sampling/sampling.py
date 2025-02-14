@@ -32,13 +32,14 @@ class TauLeaping():
     def __init__(self, cfg):
         self.cfg =cfg
 
-    def sample(self, model, N, num_intermediates):
+    def sample(self, model, N, num_intermediates=None):
         t = 1.0
         C,H,W = self.cfg.data.shape
         D = C*H*W
         S = self.cfg.data.S
         scfg = self.cfg.sampler
         num_steps = scfg.num_steps
+        print("n steps:", num_steps)
         min_t = scfg.min_t
         eps_ratio = scfg.eps_ratio
         initial_dist = scfg.initial_dist
@@ -54,13 +55,13 @@ class TauLeaping():
 
 
             ts = np.concatenate((np.linspace(1.0, min_t, num_steps), np.array([0])))
-            save_ts = ts[np.linspace(0, len(ts)-2, num_intermediates, dtype=int)]
+            save_ts = ts[0:-1]
 
             x_hist = []
-            x0_hist = []
             rate_hist = []
 
             counter = 0
+            last_x = x
             for idx, t in tqdm(enumerate(ts[0:-1])):
                 h = ts[idx] - ts[idx+1]
 
@@ -92,20 +93,12 @@ class TauLeaping():
 
                 reverse_rates = forward_rates * inner_sum # (N, D, S)
 
-                if t in save_ts:
-                    x_hist.append(x.clone().detach().cpu().numpy())
-                    rr = reverse_rates[
-                    torch.arange(N, device=device).repeat_interleave(D),
-                    torch.arange(D, device=device).repeat(N),
-                    x.long().flatten()
-                ]
-                    x0_hist.append(rr.clone().detach().cpu().numpy())
                 reverse_rates[
                     torch.arange(N, device=device).repeat_interleave(D),
                     torch.arange(D, device=device).repeat(N),
                     x.long().flatten()
-                ] = 0.0
-
+                ] = 0.0 # zero diag
+                
                 diffs = torch.arange(S, device=device).view(1,1,S) - x.view(N,D,1)
                 poisson_dist = torch.distributions.poisson.Poisson(reverse_rates * h)
                 jump_nums = poisson_dist.sample()
@@ -113,15 +106,19 @@ class TauLeaping():
                 overall_jump = torch.sum(adj_diffs, dim=2)
                 xp = x + overall_jump
                 x_new = torch.clamp(xp, min=0, max=S-1)
+                if t in save_ts:
+                    x_hist.append((x!=x_new).float().mean().clone().detach().cpu().numpy())
+                    rr = reverse_rates.sum(-1)
+                    rate_hist.append(rr.mean().clone().detach().cpu().numpy())
 
                 x = x_new
 
-            x_hist = np.array(x_hist).astype(int)
-            x0_hist = np.array(x0_hist).astype(int)
+            x_hist = np.array(x_hist)
+            rate_hist = np.array(rate_hist)
 
             p_0gt = F.softmax(model(x, min_t * torch.ones((N,), device=device)), dim=2) # (N, D, S)
             x_0max = torch.max(p_0gt, dim=2)[1]
-            return x_0max.detach().cpu().numpy().astype(int), x_hist, x0_hist
+            return x_0max.detach().cpu().numpy().astype(int), x_hist, rate_hist
 
 @sampling_utils.register_sampler
 class PCTauLeaping():

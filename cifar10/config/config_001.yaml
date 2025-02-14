@@ -52,12 +52,10 @@ optimizer:
   name: Adam
 sampler:
   eps_ratio: 1.0e-09
-  finish_strat: mean
   initial_dist: gaussian
-  initial_dist_std: 512.0
   min_t: 0.001
   name: TauLeaping
-  num_steps: 100
+  num_steps: 8192
 save_location:
 saving:
   checkpoint_archive_freq: 200000
